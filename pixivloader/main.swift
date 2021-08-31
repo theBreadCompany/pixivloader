@@ -99,8 +99,6 @@ struct pixivloader: ParsableCommand {
                 print("Query succeded, expecting \(_illusts.count) results with \(_illusts.flatMap({$0.image_urls}).count) pages in total.")
                 for illustration in _illusts {
                     if illustration.page_count != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) failed!") }
-
-                    
                     pixivloader.add_translations(file_url: pixivloader.translations_file_url, translation_array: illustration.tags_dict as [[String:Any]])
                 }
             } else {
