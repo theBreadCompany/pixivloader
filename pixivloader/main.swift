@@ -95,7 +95,7 @@ struct pixivloader: ParsableCommand {
             var idSet = [Int]()
             var _illusts = illusts.filter({ $0.total_bookmarks >= options.min_bookmarks && $0.page_count <= options.max_pages && valid_types.contains($0.type)})
             _illusts = _illusts.compactMap({ if !idSet.contains($0.id) {idSet.append($0.id); return $0} else {return nil} })
-            if _illusts.count > 0 {
+            if !_illusts.isEmpty {
                 print("Query succeded, expecting \(_illusts.count) results with \(_illusts.flatMap({$0.image_urls}).count) pages in total.")
                 for illustration in _illusts {
                     if illustration.page_count != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) failed!") }
@@ -117,17 +117,17 @@ struct pixivloader: ParsableCommand {
                 }
                 pixivloader.download.download(illusts: try! downloader.search(query: tags, limit: limit), download_dir: download_dir, options: self, valid_types: valid_types)
             }
-            if illust_id.count > 0 {
+            if !illust_id.isEmpty {
                 var illusts: [PixivIllustration] = []
                 let _ = illust_id.flatMap({parse_result(source: $0)}).map({do { illusts.append(try downloader.illustration(illust_id: $0)) } catch let e { handle(error: e) }})
                 pixivloader.download.download(illusts: illusts, download_dir: download_dir, options: self, valid_types: valid_types)
             }
-            if user_id.count > 0 {
+            if !user_id.isEmpty {
                 var illusts: [PixivIllustration] = []
                 let _ = user_id.map({do { let _ = try downloader.user_illusts(user: $0, limit: limit).map({illusts.append($0)})} catch let e {pixivloader.handle(error: e)}})
                 pixivloader.download.download(illusts: illusts,download_dir: download_dir, options: self, valid_types: valid_types)
             }
-            if source.count > 0 {
+            if !source.isEmpty {
                 var illusts: [PixivIllustration] = []
                 let _ = source.flatMap({parse_result(source: $0)}).map({ do { illusts.append(contentsOf: try downloader.related_illusts(illust_id: $0, limit: limit))} catch let e {pixivloader.handle(error: e)}})
                 pixivloader.download.download(illusts: illusts, download_dir: download_dir, options: self, valid_types: valid_types)
