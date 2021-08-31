@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		E51F0BAA2629EBC600E36CD0 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51F0BA92629EBC600E36CD0 /* main.swift */; };
-		E5690F96266FA65F008D708A /* SwiftyPixiv in Frameworks */ = {isa = PBXBuildFile; productRef = E5690F95266FA65F008D708A /* SwiftyPixiv */; };
 		E575FC4F262F07A20048EB2C /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = E575FC4E262F07A20048EB2C /* ArgumentParser */; };
+		E5CAFADB26DECFC6006BE256 /* SwiftyPixiv in Frameworks */ = {isa = PBXBuildFile; productRef = E5CAFADA26DECFC6006BE256 /* SwiftyPixiv */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,8 +45,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E5690F96266FA65F008D708A /* SwiftyPixiv in Frameworks */,
 				E575FC4F262F07A20048EB2C /* ArgumentParser in Frameworks */,
+				E5CAFADB26DECFC6006BE256 /* SwiftyPixiv in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,7 +97,7 @@
 			name = "pixivloader-cli";
 			packageProductDependencies = (
 				E575FC4E262F07A20048EB2C /* ArgumentParser */,
-				E5690F95266FA65F008D708A /* SwiftyPixiv */,
+				E5CAFADA26DECFC6006BE256 /* SwiftyPixiv */,
 			);
 			productName = SwiftyPixiv;
 			productReference = E567C2F625FC28E2001F3D7B /* pixivloader-cli */;
@@ -129,8 +129,7 @@
 			mainGroup = E567C2ED25FC28E2001F3D7B;
 			packageReferences = (
 				E575FC4D262F07A20048EB2C /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
-				E5690F94266FA65F008D708A /* XCRemoteSwiftPackageReference "SwiftyPixiv" */,
-				E546402826AB3D4900503381 /* XCRemoteSwiftPackageReference "SwiftyGif" */,
+				E5CAFAD926DECFC6006BE256 /* XCRemoteSwiftPackageReference "swiftypixiv" */,
 			);
 			productRefGroup = E567C2F725FC28E2001F3D7B /* Products */;
 			projectDirPath = "";
@@ -219,7 +218,7 @@
 					"@loader_path/Frameworks",
 				);
 				LLVM_LTO = YES_THIN;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -284,7 +283,7 @@
 					"@loader_path/Frameworks",
 				);
 				LLVM_LTO = YES_THIN;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;
@@ -315,7 +314,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thebreadcompany.pixivloader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REEXPORTED_FRAMEWORK_NAMES = "";
@@ -346,7 +345,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				"MTL_ENABLE_DEBUG_INFO[arch=*]" = NO;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thebreadcompany.pixivloader;
@@ -382,22 +381,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E546402826AB3D4900503381 /* XCRemoteSwiftPackageReference "SwiftyGif" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kirualex/SwiftyGif.git";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-		E5690F94266FA65F008D708A /* XCRemoteSwiftPackageReference "SwiftyPixiv" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "file:///Users/fabio/Documents/Xcode/SwiftyPixiv";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		E575FC4D262F07A20048EB2C /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-argument-parser";
@@ -406,18 +389,26 @@
 				minimumVersion = 0.4.1;
 			};
 		};
+		E5CAFAD926DECFC6006BE256 /* XCRemoteSwiftPackageReference "swiftypixiv" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/thebreadcompany/swiftypixiv";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E5690F95266FA65F008D708A /* SwiftyPixiv */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E5690F94266FA65F008D708A /* XCRemoteSwiftPackageReference "SwiftyPixiv" */;
-			productName = SwiftyPixiv;
-		};
 		E575FC4E262F07A20048EB2C /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E575FC4D262F07A20048EB2C /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
+		};
+		E5CAFADA26DECFC6006BE256 /* SwiftyPixiv */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5CAFAD926DECFC6006BE256 /* XCRemoteSwiftPackageReference "swiftypixiv" */;
+			productName = SwiftyPixiv;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
