@@ -41,6 +41,9 @@ You will be asked to provide either a token or you regular credentials on first 
 ## TODO
 - Create tests
 
+## Tools
+- check.swift: a small script to check if a directory contains illustrations of another directory. Compile with ```swiftc check.swift``` and use with ```check <dir1> <dir2>```, all matching illustrations in ```<dir1>``` will be deleted
+
 ## Announcements
 I'll release a repo of an iOS/macOS app using this API in a few weeks.
 
