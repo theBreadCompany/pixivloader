@@ -41,9 +41,9 @@
         "package": "pixivswift",
         "repositoryURL": "https://github.com/theBreadCompany/pixivswift.git",
         "state": {
-          "branch": "master",
-          "revision": "df18549ffc3212f43a410901ebf45ad5021dff7a",
-          "version": null
+          "branch": null,
+          "revision": "0b2eddd71518a3e5bbf9a6e219673608371b1158",
+          "version": "1.0.0"
         }
       },
       {
@@ -53,15 +53,6 @@
           "branch": null,
           "revision": "83b23d940471b313427da226196661856f6ba3e0",
           "version": "0.4.4"
-        }
-      },
-      {
-        "package": "SwiftyGif",
-        "repositoryURL": "https://github.com/kirualex/SwiftyGif.git",
-        "state": {
-          "branch": "master",
-          "revision": "601bab49e5ea9cfff73f407d8b34114a80142965",
-          "version": null
         }
       },
       {
@@ -75,10 +66,10 @@
       },
       {
         "package": "SwiftyPixiv",
-        "repositoryURL": "/Users/fabio/Documents/Xcode/SwiftyPixiv",
+        "repositoryURL": "https://github.com/thebreadcompany/swiftypixiv",
         "state": {
           "branch": "main",
-          "revision": "d7673629b35a93dfd5021eb94e2ec85c96a087d9",
+          "revision": "e47fb763663d189e960e4932ec4d56e0e6057521",
           "version": null
         }
       },

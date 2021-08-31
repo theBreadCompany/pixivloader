@@ -18,7 +18,7 @@ struct pixivloader: ParsableCommand {
         subcommands: [download.self, bookmark.self, unbookmark.self, follow.self, unfollow.self, info.self, meta_update.self])
     
 
-    static let config_dir_url: URL = URL(fileURLWithPath: "pixie", relativeTo: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!)
+    static let config_dir_url: URL = URL(fileURLWithPath: "pixivloader", relativeTo: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!)
     static let config_file_url: URL = URL(fileURLWithPath: "config.txt", relativeTo: config_dir_url)
     static let translations_file_url: URL = URL(fileURLWithPath: "translations.txt", relativeTo: config_dir_url)
     
