@@ -31,7 +31,7 @@ SUBCOMMANDS:
   meta_update             update metadata of given images
 ```
 
-See ```pixivloader help <subcommand>``` for detailed help.
+See ```pixivloader help <subcommand>``` or [furtherHelp.md](https://github.com/theBreadCompany/pixivloader/blob/main/furtherHelp.md)for detailed help.
 You will be asked to provide either a token or you regular credentials on first login.
 
 ### Examples
