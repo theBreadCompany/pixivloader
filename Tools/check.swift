@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 if CommandLine.arguments.count == 3 {
     let dir1 = CommandLine.arguments[1]
     let dir2 = CommandLine.arguments[2]

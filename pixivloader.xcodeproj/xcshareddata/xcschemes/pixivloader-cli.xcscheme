@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E567C2F525FC28E2001F3D7B"
                BuildableName = "pixivloader-cli"
-               BlueprintName = "pixivloader-cli"
+               BlueprintName = "pixivloader"
                ReferencedContainer = "container:pixivloader.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,7 +47,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E567C2F525FC28E2001F3D7B"
             BuildableName = "pixivloader-cli"
-            BlueprintName = "pixivloader-cli"
+            BlueprintName = "pixivloader"
             ReferencedContainer = "container:pixivloader.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,7 +64,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E567C2F525FC28E2001F3D7B"
             BuildableName = "pixivloader-cli"
-            BlueprintName = "pixivloader-cli"
+            BlueprintName = "pixivloader"
             ReferencedContainer = "container:pixivloader.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

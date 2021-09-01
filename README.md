@@ -14,7 +14,7 @@ I haven't uploaded an app archive yet, so you need to open the project file in X
 
 ## Documentation
 
-generally:
+### generally:
 ```
 USAGE: pixivloader <subcommand>
 
@@ -32,24 +32,27 @@ SUBCOMMANDS:
 ```
 
 See ```pixivloader help <subcommand>``` for detailed help.
-
 You will be asked to provide either a token or you regular credentials on first login.
-
 
 ### Examples
 
-- ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. 50 illustrations of the user 'nixeu' to the directory 'uwu'
-- ```pixivloader info --illust 92167325```-> print information about the illustration with the ID 92167325 (filenames are possible, too)
-- ```pixivlaoder bookmark uwu``` -> publicly bookmarks all illustrations in the directory 'uwu'
+- ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. ``50``` illustrations of the user ```nixeu``` to the directory ```uwu```
+- ```pixivloader info --illust 92167325```-> print information about the illustration with the ID ```92167325``` (filenames are possible, too)
+- ```pixivloader bookmark uwu``` -> publicly bookmarks all illustrations in the directory ```uwu```
 
-## TODO
-- Create tests
+### Tips And Tricks
+- if your system has a easy-to-use index search (like macOS spotlight), you can combine this tool with it: you can use i.e. ```pixivloader download -s $(mdfind -interpret "girl scenery" -onlyin <dir1>)``` to download illustrations that are related to the ones returned by the search query, which itself searches for images with the tags ```girl``` and ```scenery``` in the directory ```<dir1>```.
+- the script is not yet able to read the the source URL integrated in the image, meaning that you have to preserve the ID in the filename in order to keep it recognizable by the script
 
 ## Tools
 - check.swift: a small script to check if a directory contains illustrations of another directory. Compile with ```swiftc check.swift``` and use with ```check <dir1> <dir2>```, all matching illustrations in ```<dir1>``` will be deleted
 
+## TODO
+- Create tests
+
 ## Announcements
 I'll release a repo of an iOS/macOS app using this API in a few weeks.
+
 
 ## Credits
 - [pixiv.net](https://pixiv.net) for their amazing platform
