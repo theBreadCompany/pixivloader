@@ -36,7 +36,7 @@ You will be asked to provide either a token or you regular credentials on first 
 
 ### Examples
 
-- ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. ``50``` illustrations of the user ```nixeu``` to the directory ```uwu```
+- ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. ```50``` illustrations of the user ```nixeu``` to the directory ```uwu```
 - ```pixivloader info --illust 92167325```-> print information about the illustration with the ID ```92167325``` (filenames are possible, too)
 - ```pixivloader bookmark uwu``` -> publicly bookmarks all illustrations in the directory ```uwu```
 
