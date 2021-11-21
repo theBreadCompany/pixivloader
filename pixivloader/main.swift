@@ -93,7 +93,7 @@ struct pixivloader: ParsableCommand {
         var illusts: Bool = true
         
         static func download(illusts: [PixivIllustration], download_dir: String, options: download, valid_types: Array<IllustrationType>) {
-            var _illusts = Set(illusts.filter({ $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages && valid_types.contains($0.type)}))
+            let _illusts = Set(illusts.filter({ $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages && valid_types.contains($0.type)}))
             if !_illusts.isEmpty {
                 print("Query succeded, expecting \(_illusts.count) results with \(_illusts.reduce(0, {$0+$1.pageCount})) pages in total.")
                 let bar = Progressbar(length: illusts.count, maxWidth: 84)

@@ -9,7 +9,8 @@
 /* Begin PBXBuildFile section */
 		E51F0BAA2629EBC600E36CD0 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51F0BA92629EBC600E36CD0 /* main.swift */; };
 		E575FC4F262F07A20048EB2C /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = E575FC4E262F07A20048EB2C /* ArgumentParser */; };
-		E5CAFADB26DECFC6006BE256 /* SwiftyPixiv in Frameworks */ = {isa = PBXBuildFile; productRef = E5CAFADA26DECFC6006BE256 /* SwiftyPixiv */; };
+		E5E4717A274AE6CA0094DF53 /* swiftbar in Frameworks */ = {isa = PBXBuildFile; productRef = E5E47179274AE6CA0094DF53 /* swiftbar */; };
+		E5F64DBF270F864B007CA7D0 /* pixivswiftWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = E5F64DBE270F864B007CA7D0 /* pixivswiftWrapper */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,7 +49,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				E575FC4F262F07A20048EB2C /* ArgumentParser in Frameworks */,
-				E5CAFADB26DECFC6006BE256 /* SwiftyPixiv in Frameworks */,
+				E5F64DBF270F864B007CA7D0 /* pixivswiftWrapper in Frameworks */,
+				E5E4717A274AE6CA0094DF53 /* swiftbar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,6 +64,7 @@
 				E5CAFADC26DEEAD9006BE256 /* README.md */,
 				E567C2F825FC28E2001F3D7B /* pixivloader */,
 				E567C2F725FC28E2001F3D7B /* Products */,
+				E5F64DBD270F864B007CA7D0 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -79,6 +82,13 @@
 				E51F0BA92629EBC600E36CD0 /* main.swift */,
 			);
 			path = pixivloader;
+			sourceTree = "<group>";
+		};
+		E5F64DBD270F864B007CA7D0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -101,7 +111,8 @@
 			name = pixivloader;
 			packageProductDependencies = (
 				E575FC4E262F07A20048EB2C /* ArgumentParser */,
-				E5CAFADA26DECFC6006BE256 /* SwiftyPixiv */,
+				E5F64DBE270F864B007CA7D0 /* pixivswiftWrapper */,
+				E5E47179274AE6CA0094DF53 /* swiftbar */,
 			);
 			productName = SwiftyPixiv;
 			productReference = E567C2F625FC28E2001F3D7B /* pixivloader */;
@@ -114,7 +125,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1300;
+				LastUpgradeCheck = 1310;
 				TargetAttributes = {
 					E567C2F525FC28E2001F3D7B = {
 						CreatedOnToolsVersion = 12.4;
@@ -133,7 +144,8 @@
 			mainGroup = E567C2ED25FC28E2001F3D7B;
 			packageReferences = (
 				E575FC4D262F07A20048EB2C /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
-				E5CAFAD926DECFC6006BE256 /* XCRemoteSwiftPackageReference "swiftypixiv" */,
+				E5F64DBA270F8507007CA7D0 /* XCRemoteSwiftPackageReference "pixivswift" */,
+				E5E47178274AE6CA0094DF53 /* XCRemoteSwiftPackageReference "swiftbar" */,
 			);
 			productRefGroup = E567C2F725FC28E2001F3D7B /* Products */;
 			projectDirPath = "";
@@ -226,7 +238,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -314,6 +326,7 @@
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/pixivloader",
 				);
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -346,6 +359,7 @@
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/pixivloader",
 				);
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -395,11 +409,19 @@
 				minimumVersion = 0.4.1;
 			};
 		};
-		E5CAFAD926DECFC6006BE256 /* XCRemoteSwiftPackageReference "swiftypixiv" */ = {
+		E5E47178274AE6CA0094DF53 /* XCRemoteSwiftPackageReference "swiftbar" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/thebreadcompany/swiftypixiv";
+			repositoryURL = "https://github.com/theBreadCompany/swiftbar";
 			requirement = {
-				branch = main;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		E5F64DBA270F8507007CA7D0 /* XCRemoteSwiftPackageReference "pixivswift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/theBreadCompany/pixivswift";
+			requirement = {
+				branch = master;
 				kind = branch;
 			};
 		};
@@ -411,15 +433,20 @@
 			package = E575FC4D262F07A20048EB2C /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
 		};
-		E5CAFADA26DECFC6006BE256 /* SwiftyPixiv */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E5CAFAD926DECFC6006BE256 /* XCRemoteSwiftPackageReference "swiftypixiv" */;
-			productName = SwiftyPixiv;
-		};
 		E5CAFADF26DEF254006BE256 /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E575FC4D262F07A20048EB2C /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
+		};
+		E5E47179274AE6CA0094DF53 /* swiftbar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5E47178274AE6CA0094DF53 /* XCRemoteSwiftPackageReference "swiftbar" */;
+			productName = swiftbar;
+		};
+		E5F64DBE270F864B007CA7D0 /* pixivswiftWrapper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5F64DBA270F8507007CA7D0 /* XCRemoteSwiftPackageReference "pixivswift" */;
+			productName = pixivswiftWrapper;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
