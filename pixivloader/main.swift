@@ -9,6 +9,7 @@ import Foundation
 import ArgumentParser
 import pixivswiftWrapper
 import pixivswift
+import swiftbar
 
 extension Publicity: ExpressibleByArgument {}
 
@@ -95,9 +96,11 @@ struct pixivloader: ParsableCommand {
             var _illusts = Set(illusts.filter({ $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages && valid_types.contains($0.type)}))
             if !_illusts.isEmpty {
                 print("Query succeded, expecting \(_illusts.count) results with \(_illusts.reduce(0, {$0+$1.pageCount})) pages in total.")
+                let bar = Progressbar(length: illusts.count, maxWidth: 84)
                 for illustration in _illusts {
                     if illustration.pageCount != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) incomplete/failed!") }
                     pixivloader.add_translations(file_url: pixivloader.translations_file_url, newTranslations: illustration.tags)
+                    bar.setProgressAndPrint(bar.getProgress() + 1)
                 }
             } else {
                 print("No illustrations to download!")
