@@ -7,7 +7,7 @@
 
 import Foundation
 import ArgumentParser
-import SwiftyPixiv
+import pixivswiftWrapper
 import pixivswift
 
 extension Publicity: ExpressibleByArgument {}
@@ -91,15 +91,13 @@ struct pixivloader: ParsableCommand {
         @Flag(name: .long, inversion: .prefixedNo, help: "include illustrations")
         var illusts: Bool = true
         
-        static func download(illusts: [PixivIllustration], download_dir: String, options: download, valid_types: Array<IllustType>) {
-            var idSet = [Int]()
-            var _illusts = illusts.filter({ $0.total_bookmarks >= options.min_bookmarks && $0.page_count <= options.max_pages && valid_types.contains($0.type)})
-            _illusts = _illusts.compactMap({ if !idSet.contains($0.id) {idSet.append($0.id); return $0} else {return nil} })
+        static func download(illusts: [PixivIllustration], download_dir: String, options: download, valid_types: Array<IllustrationType>) {
+            var _illusts = Set(illusts.filter({ $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages && valid_types.contains($0.type)}))
             if !_illusts.isEmpty {
-                print("Query succeded, expecting \(_illusts.count) results with \(_illusts.flatMap({$0.image_urls}).count) pages in total.")
+                print("Query succeded, expecting \(_illusts.count) results with \(_illusts.reduce(0, {$0+$1.pageCount})) pages in total.")
                 for illustration in _illusts {
-                    if illustration.page_count != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) failed!") }
-                    pixivloader.add_translations(file_url: pixivloader.translations_file_url, translation_array: illustration.tags_dict as [[String:Any]])
+                    if illustration.pageCount != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) incomplete/failed!") }
+                    pixivloader.add_translations(file_url: pixivloader.translations_file_url, newTranslations: illustration.tags)
                 }
             } else {
                 print("No illustrations to download!")
@@ -108,7 +106,7 @@ struct pixivloader: ParsableCommand {
         
         mutating func run() {
             
-            let valid_types: [IllustType] = [ugoiras ? IllustType.ugoira : nil, mangas ? IllustType.manga : nil, illusts ? IllustType.illust : nil].compactMap({$0})
+            let valid_types: [IllustrationType] = [ugoiras ? IllustrationType.ugoira : nil, mangas ? IllustrationType.manga : nil, illusts ? IllustrationType.illust : nil].compactMap({$0})
                              
             if var tags = tags {
                 let _ = (translations.keys).sorted(by: { $0.count > $1.count }).filter({ tags.lowercased().contains($0.lowercased()) }).map({tags = tags.lowercased().replacingOccurrences(of: $0.lowercased(), with: translations[$0]!)})
@@ -133,6 +131,9 @@ struct pixivloader: ParsableCommand {
                 pixivloader.download.download(illusts: illusts, download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if newest {
+                if min_bookmarks == config["min_bookmarks"] as! Int {
+                    min_bookmarks = 0
+                }
                 do { pixivloader.download.download(illusts: try downloader.my_following_illusts(publicity: options.publicity, limit: limit), download_dir: download_dir, options: self, valid_types: valid_types) } catch let e {pixivloader.handle(error: e)}
             }
             if recommended {
@@ -190,7 +191,7 @@ struct pixivloader: ParsableCommand {
         mutating func run() {
             
             if let illust = illust {
-                let _ = parse_result(source: illust).map({ do { try downloader.follow(user: downloader.illustration(illust_id: $0).user_id.description, publicity: self.options.publicity); Thread.sleep(forTimeInterval: .init(0.2)) } catch let e {pixivloader.handle(error: e)}})
+                let _ = parse_result(source: illust).map({ do { try downloader.follow(user: downloader.illustration(illust_id: $0).user.id.description, publicity: self.options.publicity); Thread.sleep(forTimeInterval: .init(0.2)) } catch let e {pixivloader.handle(error: e)}})
             } else if let user = user {
                 try! downloader.follow(user: user, publicity: self.options.publicity)
             } else {
@@ -211,7 +212,7 @@ struct pixivloader: ParsableCommand {
         mutating func run() {
             
             if let illust = illust {
-                let _ = parse_result(source: illust).map({ do { try downloader.unfollow(user: downloader.illustration(illust_id: $0).user_id.description); Thread.sleep(forTimeInterval: .init(0.2)) } catch let e { pixivloader.handle(error: e) } })
+                let _ = parse_result(source: illust).map({ do { try downloader.unfollow(user: downloader.illustration(illust_id: $0).user.id.description); Thread.sleep(forTimeInterval: .init(0.2)) } catch let e { pixivloader.handle(error: e) } })
             } else if let user = user {
                 try! downloader.unfollow(user: user)
             }
@@ -236,11 +237,11 @@ struct pixivloader: ParsableCommand {
                 let illustration = try! downloader.illustration(illust_id: parse_result(source: illust).first!)
                 print("Title: \(illustration.title)")
                 print("Illustration ID: \(illustration.id)")
-                print("User name: \(illustration.user_name)")
-                print("User ID: \(illustration.user_id)")
-                print("Tags: \(illustration.tags_dict.description)")
-                print("Illustration bookmarks: \(illustration.total_bookmarks)")
-                print("Date/Time created: \(illustration.creation_time)")
+                print("User name: \(illustration.user.name)")
+                print("User ID: \(illustration.user.id)")
+                print("Tags: \(illustration.tags.map {$0.translatedName != nil ? $0.translatedName! : $0.name})")
+                print("Illustration bookmarks: \(illustration.totalBookmarks)")
+                print("Date/Time created: \(illustration.creationDate)")
                 print("Illustration address: https://pixiv.net/en/artworks/\(illustration.id)")
             }
         }
@@ -268,26 +269,26 @@ struct pixivloader: ParsableCommand {
         }
     }
     
-    static func parse_result(source: String, user_mode: Bool = false) -> [Int] {
-        var illusts: [Int] = []
+    static func parse_result(source: String, user_mode: Bool = false) -> Set<Int> {
+        var illusts = Set<Int>()
         if source.contains("https://") {
-            illusts.append(Int(source.split(separator: "/")[-1])!)
+            illusts.insert(Int(source.split(separator: "/")[-1])!)
         } else if FileManager().directoryExists(source) {
             for item in try! FileManager.default.contentsOfDirectory(atPath: source) {
                 if item.count >= 14, let _illust = Int(item.split(separator: "/").last!.split(separator: "_").first!) {
                     if 5 <= _illust.description.count && _illust.description.count <= 9 {
-                        illusts.append(_illust)
+                        illusts.insert(_illust)
                     }
                 }
             }
         } else if FileManager.default.fileExists(atPath: source) {
-            if let _illust = Int(source.split(separator: "/").last!.split(separator: "_").first!) { illusts.append(_illust) }
+            if let _illust = Int(source.split(separator: "/").last!.split(separator: "_").first!) { illusts.insert(_illust) }
         } else if Int(source) != nil && source.count == 8 {
-            illusts.append(Int(source)!)
+            illusts.insert(Int(source)!)
         } else if Int(source) != nil && user_mode {
-            illusts.append(Int(source)!)
+            illusts.insert(Int(source)!)
         }
-         return Array(Set(illusts))
+         return illusts
     }
     
     static func setup() {
@@ -349,7 +350,7 @@ struct pixivloader: ParsableCommand {
             } else if login_method == "t" {
                 print("token: ")
                 let token = readLine()
-                self.downloader.login(refresh_token: token)
+                self.downloader.login(refresh_token: token!)
                 return self.downloader.refresh_token!
             } else if login_method == "q" {
                 fatalError("No login method given; exiting...")
@@ -371,11 +372,11 @@ struct pixivloader: ParsableCommand {
         }
     }
     
-    static func add_translations(file_url: URL, translation_array: [[String:Any]]) {
-        for dict in translation_array {
-            if (dict["translated_name"] as? String) != nil && translations[dict["translated_name"] as! String] == nil {
-                if translations[dict["translated_name"] as! String] != "fate" {
-                    translations[dict["translated_name"] as! String] = dict["name"]! as? String
+    static func add_translations(file_url: URL, newTranslations: [IllustrationTag]) {
+        for dict in newTranslations {
+            if dict.translatedName != nil && translations[dict.translatedName ?? ""] == nil {
+                if dict.translatedName != "fate" {
+                    translations[dict.translatedName ?? ""] = dict.name
                     translations_changed = true
                 }
             }
@@ -394,3 +395,13 @@ struct pixivloader: ParsableCommand {
     }
 }
 pixivloader.main()
+
+extension PixivIllustration: Hashable {
+    public static func == (lhs: PixivIllustration, rhs: PixivIllustration) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+    }
+}
