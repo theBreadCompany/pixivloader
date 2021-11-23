@@ -10,7 +10,9 @@ Also, please do not overuse this. Pixiv has no financial benefit from this, and 
 
 ## Installation
 
-I haven't uploaded an app archive yet, so you need to open the project file in Xcode and compile *in DEBUG mode*, because a bug yet causes the script to crash when built in Release mode.
+Clone this repo via ```git clone https://github.com/theBreadCompany/pixivloader```, enter it via ```cd pixivloader``` and build via ```swift build```. You then have a handy binary at ```.build/debug/pixivloader``` that you can move to a location in your ```PATH```.
+
+You yet have to clone the repo and build it yourself because I didn't upload any binary yet as some bugs occur when built in release mode.
 
 ## Documentation
 
@@ -45,7 +47,7 @@ You will be asked to provide either a token or you regular credentials on first 
 - the script is not yet able to read the the source URL integrated in the image, meaning that you have to preserve the ID in the filename in order to keep it recognizable by the script
 
 ## Tools
-- check.swift: a small script to check if a directory contains illustrations of another directory. Compile with ```swiftc check.swift``` and use with ```check <dir1> <dir2>```, all matching illustrations in ```<dir1>``` will be deleted
+- check.swift: a small script to check if a directory contains illustrations of another directory. Use with ```check <dir1> <dir2>```, all matching illustrations from ```<dir2>``` that occur in ```<dir1>``` will be deleted. Compile with ```swiftc check.swift``` and place somewhere handy.
 
 ## TODO
 - Create tests
