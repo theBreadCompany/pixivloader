@@ -33,7 +33,7 @@ OPTIONS:
   -h, --help              Show help information.
 ```
 Examples:
-- ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. ``50``` illustrations of the user ```nixeu``` to the directory ```uwu```
+- ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. ```50``` illustrations of the user ```nixeu``` to the directory ```uwu```
 - ```pixivloader download -b -l 50 --min_bookmarks 3000``` -> download the first ```50``` illustrations you've bookmarked publicly and filter out the ones under ```3000``` bookmarks
 - ```pixivloader download -s 76945062 92390572 92364113 -l 10``` -> download illustrations related to given ```IDs```, you've keep in mind that the limit, here ```10```, is meant as the __limit per given ID__
 
@@ -69,7 +69,7 @@ ARGUMENTS:
 OPTIONS:
   -h, --help              Show help information.
 ```
-Examples:
+Example:
 - ```pixivloader unbookmark uwu``` -> ```unbookmark``` all illustrations in the directory ```uwu```, if they have been bookmarked at all
 
 ### follow
