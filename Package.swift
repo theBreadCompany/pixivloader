@@ -11,7 +11,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
-        .package(url: "https://github.com/theBreadCompany/pixivswift.git", branch: "master"),
+        .package(url: /*"file:///Users/fabio/Documents/Xcode/pixivswift"*/"https://github.com/theBreadCompany/pixivswift.git", branch: "master"),
         .package(url: "https://github.com/theBreadCompany/swiftbar.git", branch: "main")
     ],
     targets: [
@@ -22,6 +22,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "pixivswiftWrapper", package: "pixivswift"),
-                .product(name: "swiftbar", package: "swiftbar")]),
+                .product(name: "swiftbar", package: "swiftbar")])
     ]
 )

@@ -50,11 +50,15 @@ You will be asked to provide either a token or you regular credentials on first 
 - check.swift: a small script to check if a directory contains illustrations of another directory. Use with ```check <dir1> <dir2>```, all matching illustrations from ```<dir2>``` that occur in ```<dir1>``` will be deleted. Compile with ```swiftc check.swift``` and place somewhere handy.
 
 ## TODO
-- Create tests
+- create tests
+- document the rest if needed
+- use ParsableCommands instead of options for the download subcommands
+- fix headless login with pw -> [this](https://github.com/theBreadCompany/pixivswift) has to be fixed
+- don't kill the entire config if one thing is missing -> important for future changes of the config 
+- don't just crash when some trivial error like a rate limit ouccurs
 
 ## Announcements
 I'll release a repo of an iOS/macOS app using this API in a few weeks.
-
 
 ## Credits
 - [pixiv.net](https://pixiv.net) for their amazing platform

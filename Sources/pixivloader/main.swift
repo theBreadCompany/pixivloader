@@ -16,20 +16,22 @@ extension Publicity: ExpressibleByArgument {}
 struct pixivloader: ParsableCommand {
     static var configuration = CommandConfiguration(
         abstract: "Utility to manage illustrations/users from pixiv.net.",
-        subcommands: [download.self, bookmark.self, unbookmark.self, follow.self, unfollow.self, info.self, meta_update.self])
+        subcommands: [download.self, bookmark.self, unbookmark.self, follow.self, unfollow.self, info.self, meta_update.self, auth.self])
     
-
+    // for now this is ~/Library/Application Support/pixivloader and not changable
     static let config_dir_url: URL = URL(fileURLWithPath: "pixivloader", relativeTo: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!)
-    static let config_file_url: URL = URL(fileURLWithPath: "config.txt", relativeTo: config_dir_url)
-    static let translations_file_url: URL = URL(fileURLWithPath: "translations.txt", relativeTo: config_dir_url)
     
-    static let placeholder: () = setup()
+    static let config_file_url: URL = URL(fileURLWithPath: "config.json", relativeTo: config_dir_url)
     
-    static var config: [String:Any] = load_config(file_url: config_file_url)
+    static let translations_file_url: URL = URL(fileURLWithPath: "translations.json", relativeTo: config_dir_url)
+    
+    
+    static var config: pixivloaderSettings = load_config(file_url: config_file_url)
+    
     static var translations: [String:String] = load_translations(file_url: translations_file_url)
     
-    static let downloader = PixivDownloader(login_with_token: config["refresh_token"] as? String ?? "")
-    
+    static let downloader = PixivDownloader()
+    // Aka whether the translations file should be updated
     static var translations_changed: Bool = false
     
     struct Options: ParsableArguments {
@@ -37,9 +39,11 @@ struct pixivloader: ParsableCommand {
         @Option(name: [.short, .long], help: "Set publicity for operation")
         var publicity: Publicity = Publicity.public
         
-        @Flag(name: [.short, .long], help: "Set verbosity")
-        var verbose: Bool = false
+        /// If there shall be any verbosity for debugging (which for now doesnt exist) DEAD BECAUSE NO USE FOR NOW
+        //@Flag(name: [.short, .long], help: "Set verbosity")
+        //var verbose: Bool = false
         
+        /// If any customwise defined options shall be saved to the config file
         @Flag(name: [.short, .long], help: "Overwrite current configuration")
         var overwrite: Bool = false
     }
@@ -51,16 +55,16 @@ struct pixivloader: ParsableCommand {
         static var configuration = CommandConfiguration(abstract: "download illustrations")
         
         @Option(name: [.short, .long], help: "Set maximum posts to download")
-        var limit: Int = config["limit"] as! Int
+        var limit: Int = config.downloadMaxPages
         
         @Option(name: [.short, .long], help: "directory to download to")
-        var download_dir: String = config["download_dir"] as! String
+        var download_dir: String = config.downloadDirectory
         
         @Option(name: [.long], help: "maximum pages per post")
-        var max_pages: Int = config["max_pages"] as! Int
+        var max_pages: Int = config.downloadMaxPages
         
         @Option(name: [.long], help: "minimum bookmarks required to be downloaded")
-        var min_bookmarks: Int = config["min_bookmarks"] as! Int
+        var min_bookmarks: Int = config.downloadMinBookmarks
         
         @Option(name: [.short, .long], help: "tags to download")
         var tags: String?
@@ -73,7 +77,7 @@ struct pixivloader: ParsableCommand {
         
         @Option(name: [.short, .long], parsing: .upToNextOption, help: "download illustrations related to given ID/URL")
         var source: [String] = []
-       
+        
         @Flag(name: .shortAndLong, help: "download the newest illustrations of the users you are following")
         var newest: Bool = false
         
@@ -82,6 +86,15 @@ struct pixivloader: ParsableCommand {
         
         @Flag(name: .shortAndLong, help: "download your bookmarks")
         var bookmarks: Bool = false
+        
+        @Option(name: [.long], help: "blacklist illustrations; also can be used to prevent illustrations i.e. relying in specific folders from redownloading")
+        var blacklistedIllustrations: [Int] = []
+        
+        @Option(name: [.long], help: "blacklist users")
+        var blacklistedUsers: [String] = []
+        
+        @Option(name: [.long], help: "blacklist tags")
+        var blacklistedTags: [String] = []
         
         @Flag(name: .long, inversion: .prefixedNo, help: "include ugoiras (GIFs)")
         var ugoiras: Bool = true
@@ -93,14 +106,20 @@ struct pixivloader: ParsableCommand {
         var illusts: Bool = true
         
         static func download(illusts: [PixivIllustration], download_dir: String, options: download, valid_types: Array<IllustrationType>) {
-            let _illusts = Set(illusts.filter({ $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages && valid_types.contains($0.type)}))
+            let _illusts = Set(illusts.filter(
+                { !options.blacklistedIllustrations.contains($0.id) // check against blacklisted illustration ID
+                    && !options.blacklistedUsers.contains($0.user.name) // check against blacklisted user name
+                    && !options.blacklistedUsers.contains(String($0.user.id)) // check against blacklisted user id
+                    && $0.tags.allSatisfy({!options.blacklistedTags.contains($0.translatedName ?? $0.name)}) // check against blacklisted tags
+                    && $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages // check against typical filters, namely bookmarks and pages
+                    && valid_types.contains($0.type)})) // check against allowed media types
             if !_illusts.isEmpty {
                 print("Query succeded, expecting \(_illusts.count) results with \(_illusts.reduce(0, {$0+$1.pageCount})) pages in total.")
-                let bar = Progressbar(length: _illusts.count, maxWidth: 84)
+                let bar = Progressbar(total: _illusts.count)
                 for illustration in _illusts {
-                    if illustration.pageCount != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) incomplete/failed!") }
-                    pixivloader.add_translations(file_url: pixivloader.translations_file_url, newTranslations: illustration.tags)
-                    bar.setProgressAndPrint(bar.getProgress() + 1)
+                    if illustration.pageCount != downloader.download(illustration: illustration, directory: URL(fileURLWithPath: download_dir, isDirectory: true), with_metadata: true).count { print("Download for illustration \(illustration.id) incomplete/failed!") } // The doenload has failed if the page count of the illustration does not equal the number of URLs returned by the download method
+                    pixivloader.add_translations(file_url: pixivloader.translations_file_url, newTranslations: illustration.tags) // dump illustration tags
+                    bar.setProgressAndPrint(bar.getProgress() + 1) // increment progress bar
                 }
             } else {
                 print("No illustrations to download!")
@@ -109,13 +128,23 @@ struct pixivloader: ParsableCommand {
         
         mutating func run() {
             
-            let valid_types: [IllustrationType] = [ugoiras ? IllustrationType.ugoira : nil, mangas ? IllustrationType.manga : nil, illusts ? IllustrationType.illust : nil].compactMap({$0})
-                             
+            // Overwrite changed properties if applicable
+            if options.overwrite {
+                config.downloadDirectory = download_dir
+                config.downloadMaxPages = max_pages
+                config.downloadMinBookmarks = min_bookmarks
+                config.blacklistIllustrations = blacklistedIllustrations
+                config.blacklistUsers = blacklistedUsers
+                config.blacklistTags = blacklistedTags
+            }
+            
+            let valid_types: [IllustrationType] = [ugoiras ? IllustrationType.ugoira : nil, mangas ? IllustrationType.manga : nil, illusts ? IllustrationType.illust : nil].compactMap({$0}) // Set the allowed media types depending on the set flags
+            
             if var tags = tags {
                 let _ = (translations.keys).sorted(by: { $0.count > $1.count }).filter({ tags.lowercased().contains($0.lowercased()) }).map({tags = tags.lowercased().replacingOccurrences(of: $0.lowercased(), with: translations[$0]!)})
-                if self.options.verbose {
-                    print("Downloading tags: \(String(describing: tags.description))")
-                }
+                //if self.options.verbose {
+                print("Downloading tags: \(String(describing: tags.description))")
+                //}
                 pixivloader.download.download(illusts: try! downloader.search(query: tags, limit: limit), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if !illust_id.isEmpty {
@@ -134,9 +163,7 @@ struct pixivloader: ParsableCommand {
                 pixivloader.download.download(illusts: illusts, download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if newest {
-                if min_bookmarks == config["min_bookmarks"] as! Int {
-                    min_bookmarks = 0
-                }
+                min_bookmarks = (min_bookmarks == config.downloadMinBookmarks) ? 0 : min_bookmarks
                 do { pixivloader.download.download(illusts: try downloader.my_following_illusts(publicity: options.publicity, limit: limit), download_dir: download_dir, options: self, valid_types: valid_types) } catch let e {pixivloader.handle(error: e)}
             }
             if recommended {
@@ -159,7 +186,7 @@ struct pixivloader: ParsableCommand {
         var bookmark: [String]
         
         mutating func run() {
-              
+            
             let source = bookmark.flatMap({parse_result(source: $0)})
             let _ = source.map( { do { try downloader.bookmark(illust_id: $0, publicity: self.options.publicity); source.count >= 50 ? Thread.sleep(forTimeInterval: TimeInterval(0.16)) : Thread.sleep(forTimeInterval: TimeInterval(0))} catch let e {pixivloader.handle(error: e)}} )
             
@@ -168,12 +195,12 @@ struct pixivloader: ParsableCommand {
     
     struct unbookmark: ParsableCommand {
         static var configuration = CommandConfiguration(abstract: "unbookmark illustrations")
-                
+        
         @Argument(parsing: .remaining, help: "un-bookmark illustration")
         var unbookmark: [String]
         
         mutating func run() {
-
+            
             let source = unbookmark.flatMap({parse_result(source: $0)})
             let _ = source.map( {do { try downloader.unbookmark(illust_id: $0); source.count >= 50 ? Thread.sleep(forTimeInterval: TimeInterval(0.15)) : Thread.sleep(forTimeInterval: TimeInterval(0))} catch let e {pixivloader.handle(error: e)}} )
             
@@ -272,6 +299,28 @@ struct pixivloader: ParsableCommand {
         }
     }
     
+    struct auth: ParsableCommand {
+        static var configuration = CommandConfiguration(abstract: "authorize the pixivloader installation")
+        
+        @Option(name: [.short, .long], help: "authorize by using a token")
+        var refreshtoken: String?
+        
+        @Option(name: [.short, .long], help: "authorize by using username AND password")
+        var user: String?
+        
+        @Option(name: [.short, .long], help: "authorize by using password AND password")
+        var password: String?
+        
+        mutating func run() throws {
+            downloader.login(username: user, password: password, refresh_token: refreshtoken)
+            if !downloader.authed {
+                fatalError("Login failed with given credentials!")
+            }
+            config.loginRefreshToken = downloader.refresh_token!
+            save_and_quit(save_config: true, save_translations: false, error: nil)
+        }
+    }
+    
     static func parse_result(source: String, user_mode: Bool = false) -> Set<Int> {
         var illusts = Set<Int>()
         if source.contains("https://") {
@@ -291,7 +340,7 @@ struct pixivloader: ParsableCommand {
         } else if Int(source) != nil && user_mode {
             illusts.insert(Int(source)!)
         }
-         return illusts
+        return illusts
     }
     
     static func setup() {
@@ -306,27 +355,11 @@ struct pixivloader: ParsableCommand {
         }
     }
     
-    static func load_config(file_url: URL) -> [String:Any]{
-        var _config: [String?:Any?] = [:]
-        do {
-            _config = try JSONSerialization.jsonObject(with: Data(String(contentsOfFile: file_url.path).utf8), options: .fragmentsAllowed) as! [String?:Any?]
-            if _config["download_dir"] == nil || _config["limit"] == nil || _config["max_pages"] == nil || _config["min_bookmarks"] == nil {
-                _config["download_dir"] = "Downloads"
-                _config["limit"] = 20
-                _config["min_bookmarks"] = 2000
-                _config["max_pages"] = 10
-            }
-            if _config["refresh_token"] == nil {
-                _config["refresh_token"] = get_token()
-            }
-        } catch {
-            _config["download_dir"] = "Downloads"
-            _config["limit"] = 20
-            _config["min_bookmarks"] = 2000
-            _config["max_pages"] = 10
-            _config["refresh_token"] = get_token()
-        }
-        return _config as! [String:Any]
+    static func load_config(file_url: URL) -> pixivloaderSettings {
+        setup()
+        let config = (try? JSONDecoder().decode(pixivloaderSettings.self, from: try! Data(String(contentsOfFile: file_url.path).utf8))) ?? pixivloaderSettings()
+        downloader.login(refresh_token: config.loginRefreshToken)
+        return config
     }
     
     static func load_translations(file_url: URL) -> [String:String]{
@@ -339,31 +372,11 @@ struct pixivloader: ParsableCommand {
         return _translations
     }
     
-    static func get_token() -> String {
-        print("No login credentials saved; enter \"u\" to login with credentials, \n\"t\" if you have a refreshtoken or \"q\" to quit.")
-        var login_method = ""
-        while true {
-            login_method = readLine()!
-            if login_method == "u" {
-                print("username: ")
-                let username = readLine()
-                let password = String(validatingUTF8: getpass("password: "))
-                self.downloader.login(username: username, password: password)
-                return self.downloader.refresh_token!
-            } else if login_method == "t" {
-                print("token: ")
-                let token = readLine()
-                self.downloader.login(refresh_token: token!)
-                return self.downloader.refresh_token!
-            } else if login_method == "q" {
-                fatalError("No login method given; exiting...")
-            }
-        }
-    }
-    
     static func save_and_quit(save_config: Bool, save_translations: Bool, error: Error?) {
         if save_config {
-            try! config.description.write(toFile: config_file_url.path, atomically: true, encoding: String.Encoding.utf8)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            try! encoder.encode(config).write(to: config_file_url)
         }
         if save_translations {
             try! JSONSerialization.data(withJSONObject: translations, options: .prettyPrinted).write(to: self.translations_file_url)
@@ -388,10 +401,12 @@ struct pixivloader: ParsableCommand {
     
     static func handle(error: Error) {
         switch error {
-        case PixivError.targetNotFound, PixivError.badProgramming:
+        case PixivError.targetNotFound:
             return
         case PixivError.RateLimitError:
             fatalError("Exiting on RateLimit!")
+        case PixivError.AuthErrors.missingAuth:
+            fatalError("Missing auth! Please run 'pixivloader auth' first!")
         default:
             fatalError()
         }
@@ -407,4 +422,17 @@ extension PixivIllustration: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(self.id)
     }
+}
+
+public struct pixivloaderSettings: Codable {
+    public var downloadDirectory: String = "Downloads"
+    public var downloadLimit: Int = 30
+    public var downloadMaxPages: Int = 10
+    public var downloadMinBookmarks: Int = 2500
+    
+    public var blacklistTags: [String] = []
+    public var blacklistUsers: [String] = []
+    public var blacklistIllustrations: [Int] = []
+    
+    public var loginRefreshToken: String = ""
 }
