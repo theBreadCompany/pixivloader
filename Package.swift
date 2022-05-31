@@ -22,6 +22,11 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "pixivswiftWrapper", package: "pixivswift"),
-                .product(name: "swiftbar", package: "swiftbar")])
+                .product(name: "swiftbar", package: "swiftbar")]),
+        .executableTarget(
+            name: "pixivauth",
+            dependencies: [
+                .product(name: "pixivswift", package: "pixivswift")
+            ])
     ]
 )

@@ -12,7 +12,9 @@ Also, please do not overuse this. Pixiv has no financial benefit from this, and 
 
 Clone this repo via ```git clone https://github.com/theBreadCompany/pixivloader```, enter it via ```cd pixivloader``` and build via ```swift build```. You then have a handy binary at ```.build/debug/pixivloader``` that you can move to a location in your ```PATH```.
 
-You yet have to clone the repo and build it yourself because I didn't upload any binary yet as some bugs occur when built in release mode.
+You can find (pre)release binaries [here](https://github.com/thebreadcompany/pixivloader/releases).
+
+__Also for now, only the UI login reliably works, so I included the pixivauth subproject to login via the website and get a token to use with this script.__
 
 ## Documentation
 
@@ -38,6 +40,7 @@ You will be asked to provide either a token or you regular credentials on first 
 
 ### Examples
 
+- ```pixivloader auth -r <token>``` -> login with a token
 - ```pixivloader download -u nixeu -l 50 -d uwu``` -> downloads max. ```50``` illustrations of the user ```nixeu``` to the directory ```uwu```
 - ```pixivloader info --illust 92167325```-> print information about the illustration with the ID ```92167325``` (filenames are possible, too)
 - ```pixivloader bookmark uwu``` -> publicly bookmarks all illustrations in the directory ```uwu```
