@@ -7,7 +7,8 @@ let package = Package(
     name: "pixivloader",
     platforms: [.macOS(.v10_13)],
     products: [
-        .executable(name: "pixivloader", targets: ["pixivloader"])
+        .executable(name: "pixivloader", targets: ["pixivloader"]),
+        .executable(name: "pixivauth", targets: ["pixivauth"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
