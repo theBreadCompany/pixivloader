@@ -15,7 +15,6 @@ class ViewController: NSViewController {
     var loginHelper = LoginHelper()
     
     override func loadView() {
-        let screenprops = NSScreen.main!.frame
         view = NSView(frame: NSRect(x: 50, y: 50, width: 400, height: 600))
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.white.cgColor
