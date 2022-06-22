@@ -7,12 +7,11 @@ let package = Package(
     name: "pixivloader",
     platforms: [.macOS(.v10_13)],
     products: [
-        .executable(name: "pixivloader", targets: ["pixivloader"]),
-        .executable(name: "pixivauth", targets: ["pixivauth"])
+        .executable(name: "pixivloader", targets: ["pixivloader"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
-        .package(url: /*"file:///Users/fabio/Documents/Xcode/pixivswift"*/"https://github.com/theBreadCompany/pixivswift.git", branch: "master"),
+        .package(url: "https://github.com/theBreadCompany/pixivswift.git", from: "1.1.4"),
         .package(url: "https://github.com/theBreadCompany/swiftbar.git", branch: "main")
     ],
     targets: [
@@ -24,10 +23,5 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "pixivswiftWrapper", package: "pixivswift"),
                 .product(name: "swiftbar", package: "swiftbar")]),
-        .executableTarget(
-            name: "pixivauth",
-            dependencies: [
-                .product(name: "pixivswift", package: "pixivswift")
-            ])
     ]
 )
