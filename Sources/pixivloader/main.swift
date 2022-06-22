@@ -30,7 +30,7 @@ struct pixivloader: ParsableCommand {
     
     static var translations: [String:String] = load_translations(file_url: translations_file_url)
     
-    static let downloader = PixivDownloader()
+    static let downloader = PixivDownloader(login_with_token: config.loginRefreshToken)
     // Aka whether the translations file should be updated
     static var translations_changed: Bool = false
     
@@ -312,7 +312,11 @@ struct pixivloader: ParsableCommand {
         var password: String?
         
         mutating func run() throws {
+            #if canImport(Erik)
             downloader.login(username: user, password: password, refresh_token: refreshtoken)
+            #else
+            downloader.login(refresh_token: refreshtoken)
+            #endif
             if !downloader.authed {
                 fatalError("Login failed with given credentials!")
             }
@@ -357,8 +361,7 @@ struct pixivloader: ParsableCommand {
     
     static func load_config(file_url: URL) -> pixivloaderSettings {
         setup()
-        let config = (try? JSONDecoder().decode(pixivloaderSettings.self, from: try! Data(String(contentsOfFile: file_url.path).utf8))) ?? pixivloaderSettings()
-        downloader.login(refresh_token: config.loginRefreshToken)
+        let config = (try? JSONDecoder().decode(pixivloaderSettings.self, from: try! Data(contentsOf: config_file_url))) ?? pixivloaderSettings()
         return config
     }
     
