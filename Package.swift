@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
         .package(url: "https://github.com/theBreadCompany/pixivswift.git", from: "1.1.4"),
-        .package(url: "https://github.com/theBreadCompany/swiftbar.git", branch: "main")
+        .package(url: "https://github.com/theBreadCompany/swiftbar.git", .branchItem("main"))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -22,6 +22,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "pixivswiftWrapper", package: "pixivswift"),
+                .product(name: "pixivauth", package: "pixivswift"),
                 .product(name: "swiftbar", package: "swiftbar")]),
     ]
 )
