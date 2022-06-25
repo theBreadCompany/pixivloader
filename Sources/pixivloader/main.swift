@@ -87,13 +87,13 @@ struct pixivloader: ParsableCommand {
         @Flag(name: .shortAndLong, help: "download your bookmarks")
         var bookmarks: Bool = false
         
-        @Option(name: [.long], help: "blacklist illustrations; also can be used to prevent illustrations i.e. relying in specific folders from redownloading")
-        var blacklistedIllustrations: [Int] = []
+        @Option(name: [.long], parsing: .upToNextOption, help: "blacklist illustrations; also can be used to prevent illustrations i.e. relying in specific folders from redownloading")
+        var blacklistedIllustrations: [String] = []
         
-        @Option(name: [.long], help: "blacklist users")
+        @Option(name: [.long], parsing: .upToNextOption, help: "blacklist users")
         var blacklistedUsers: [String] = []
         
-        @Option(name: [.long], help: "blacklist tags")
+        @Option(name: [.long], parsing: .upToNextOption, help: "blacklist tags")
         var blacklistedTags: [String] = []
         
         @Flag(name: .long, inversion: .prefixedNo, help: "include ugoiras (GIFs)")
@@ -107,12 +107,12 @@ struct pixivloader: ParsableCommand {
         
         static func download(illusts: [PixivIllustration], download_dir: String, options: download, valid_types: Array<IllustrationType>) {
             let _illusts = Set(illusts.filter(
-                { !options.blacklistedIllustrations.contains($0.id) // check against blacklisted illustration ID
-                    && !options.blacklistedUsers.contains($0.user.name) // check against blacklisted user name
-                    && !options.blacklistedUsers.contains(String($0.user.id)) // check against blacklisted user id
+                { !options.blacklistedIllustrations.contains($0.id.description)                               // check against blacklisted illustration ID
+                    && !options.blacklistedUsers.contains($0.user.name)                                        // check against blacklisted user name
+                    && !options.blacklistedUsers.contains(String($0.user.id))                                  // check against blacklisted user id
                     && $0.tags.allSatisfy({!options.blacklistedTags.contains($0.translatedName ?? $0.name)}) // check against blacklisted tags
-                    && $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages // check against typical filters, namely bookmarks and pages
-                    && valid_types.contains($0.type)})) // check against allowed media types
+                    && $0.totalBookmarks >= options.min_bookmarks && $0.pageCount <= options.max_pages        // check against typical filters, namely bookmarks and pages
+                    && valid_types.contains($0.type)}))                                                          // check against allowed media types
             if !_illusts.isEmpty {
                 print("Query succeded, expecting \(_illusts.count) results with \(_illusts.reduce(0, {$0+$1.pageCount})) pages in total.")
                 let bar = Progressbar(total: _illusts.count)
@@ -148,29 +148,35 @@ struct pixivloader: ParsableCommand {
                 pixivloader.download.download(illusts: try! downloader.search(query: tags, limit: limit), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if !illust_id.isEmpty {
-                var illusts: [PixivIllustration] = []
-                let _ = illust_id.flatMap({parse_result(source: $0)}).map({do { illusts.append(try downloader.illustration(illust_id: $0)) } catch let e { handle(error: e) }})
-                pixivloader.download.download(illusts: illusts, download_dir: download_dir, options: self, valid_types: valid_types)
+                pixivloader.download.download(illusts: pixivloader.safelyExecute(content: illust_id.flatMap({parse_result(source: $0)}), for: { id in
+                    [try downloader.illustration(illust_id: id as! Int)]
+                }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if !user_id.isEmpty {
-                var illusts: [PixivIllustration] = []
-                let _ = user_id.map({do { let _ = try downloader.user_illusts(user: $0, limit: limit).map({illusts.append($0)})} catch let e {pixivloader.handle(error: e)}})
-                pixivloader.download.download(illusts: illusts,download_dir: download_dir, options: self, valid_types: valid_types)
+                pixivloader.download.download(illusts: pixivloader.safelyExecute(content: user_id, for: { id in
+                    try downloader.user_illusts(user: id as! String, limit: limit)
+                }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if !source.isEmpty {
-                var illusts: [PixivIllustration] = []
-                let _ = source.flatMap({parse_result(source: $0)}).map({ do { illusts.append(contentsOf: try downloader.related_illusts(illust_id: $0, limit: limit))} catch let e {pixivloader.handle(error: e)}})
-                pixivloader.download.download(illusts: illusts, download_dir: download_dir, options: self, valid_types: valid_types)
+                pixivloader.download.download(illusts: pixivloader.safelyExecute(content: source.flatMap({parse_result(source: $0)}), for: { id in
+                    try downloader.related_illusts(illust_id: id as! Int, limit: limit)
+                }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if newest {
                 min_bookmarks = (min_bookmarks == config.downloadMinBookmarks) ? 0 : min_bookmarks
-                do { pixivloader.download.download(illusts: try downloader.my_following_illusts(publicity: options.publicity, limit: limit), download_dir: download_dir, options: self, valid_types: valid_types) } catch let e {pixivloader.handle(error: e)}
+                pixivloader.download.download(illusts: pixivloader.safelyExecute(for: { _ in
+                    try downloader.my_following_illusts(publicity: options.publicity, limit: limit)
+                }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if recommended {
-                do { pixivloader.download.download(illusts: try downloader.my_recommended(limit: limit), download_dir: download_dir, options: self, valid_types: valid_types) } catch let e {pixivloader.handle(error: e)}
+                pixivloader.download.download(illusts: pixivloader.safelyExecute(for: { _ in
+                    try downloader.my_recommended(limit: limit)
+                }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             if bookmarks {
-                do { pixivloader.download.download(illusts: try downloader.my_favorite_works(limit: limit), download_dir: download_dir, options: self, valid_types: valid_types) } catch let e {pixivloader.handle(error: e)}
+                pixivloader.download.download(illusts: pixivloader.safelyExecute(for: { _ in
+                    try downloader.my_favorite_works(limit: limit)
+                }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             
             save_and_quit(save_config: options.overwrite, save_translations: translations_changed, error: nil)
@@ -184,11 +190,12 @@ struct pixivloader: ParsableCommand {
         
         @Argument(parsing: .remaining, help: "bookmark illustration")
         var bookmark: [String]
-        
+         
         mutating func run() {
             
-            let source = bookmark.flatMap({parse_result(source: $0)})
-            let _ = source.map( { do { try downloader.bookmark(illust_id: $0, publicity: self.options.publicity); source.count >= 50 ? Thread.sleep(forTimeInterval: TimeInterval(0.16)) : Thread.sleep(forTimeInterval: TimeInterval(0))} catch let e {pixivloader.handle(error: e)}} )
+            pixivloader.safelyExecute(content: bookmark.flatMap({parse_result(source: $0)}), for: ({ id in
+                try downloader.bookmark(illust_id: id as! Int)
+            }))
             
         }
     }
@@ -201,29 +208,34 @@ struct pixivloader: ParsableCommand {
         
         mutating func run() {
             
-            let source = unbookmark.flatMap({parse_result(source: $0)})
-            let _ = source.map( {do { try downloader.unbookmark(illust_id: $0); source.count >= 50 ? Thread.sleep(forTimeInterval: TimeInterval(0.15)) : Thread.sleep(forTimeInterval: TimeInterval(0))} catch let e {pixivloader.handle(error: e)}} )
-            
+            pixivloader.safelyExecute(content: unbookmark.flatMap({parse_result(source: $0)}), for: { id in
+                try downloader.unbookmark(illust_id: id as! Int)
+            })
         }
     }
     
     struct follow: ParsableCommand {
         static var configuration = CommandConfiguration(abstract: "follow users")
         
-        @OptionGroup var options: pixivloader.Options
+        @OptionGroup
+        static var options: pixivloader.Options
         
         @Option(name: [.short, .long], help: "manage illustration")
-        var illust: String?
+        var illust: [String] = []
         
         @Option(name: [.short, .long], help: "manage user")
-        var user: String?
+        var user: [String] = []
         
         mutating func run() {
             
-            if let illust = illust {
-                let _ = parse_result(source: illust).map({ do { try downloader.follow(user: downloader.illustration(illust_id: $0).user.id.description, publicity: self.options.publicity); Thread.sleep(forTimeInterval: .init(0.2)) } catch let e {pixivloader.handle(error: e)}})
-            } else if let user = user {
-                try! downloader.follow(user: user, publicity: self.options.publicity)
+            if !illust.isEmpty {
+                pixivloader.safelyExecute(content: illust.flatMap({parse_result(source: $0)}), for: { id in
+                    try downloader.follow(user: downloader.illustration(illust_id: id as! Int).user.id.description, publicity: pixivloader.follow.options.publicity)
+                })
+            } else if !user.isEmpty {
+                pixivloader.safelyExecute(content: user.flatMap({parse_result(source: $0)}), for: {
+                    try downloader.follow(user: downloader.illustration(illust_id: $0 as! Int).user.id.description, publicity: pixivloader.follow.options.publicity)
+                })
             } else {
                 print("Please set -i or -u to specify a target.")
             }
@@ -233,18 +245,22 @@ struct pixivloader: ParsableCommand {
     struct unfollow: ParsableCommand {
         static var configuration = CommandConfiguration(abstract: "unfollow users")
         
-        @Option(name: [.short, .long], help: "manage illustration")
-        var illust: String?
+        @Option(name: [.short, .long], parsing: .upToNextOption, help: "manage illustration")
+        var illust: [String] = []
         
-        @Option(name: [.short, .long], help: "manage user")
-        var user: String?
+        @Option(name: [.short, .long], parsing: .upToNextOption, help: "manage user")
+        var user: [String] = []
         
         mutating func run() {
             
-            if let illust = illust {
-                let _ = parse_result(source: illust).map({ do { try downloader.unfollow(user: downloader.illustration(illust_id: $0).user.id.description); Thread.sleep(forTimeInterval: .init(0.2)) } catch let e { pixivloader.handle(error: e) } })
-            } else if let user = user {
-                try! downloader.unfollow(user: user)
+            if !illust.isEmpty {
+                pixivloader.safelyExecute(content: illust, for: { id in
+                    try downloader.follow(user: id as! String)
+                })
+            } else if !user.isEmpty {
+                pixivloader.safelyExecute(content: user, for: { id in
+                    try downloader.unfollow(user: id as! String)
+                })
             }
         }
     }
@@ -312,11 +328,11 @@ struct pixivloader: ParsableCommand {
         var password: String?
         
         mutating func run() throws {
-            #if canImport(Erik)
+#if canImport(Erik)
             downloader.login(username: user, password: password, refresh_token: refreshtoken)
-            #else
+#else
             downloader.login(refresh_token: refreshtoken)
-            #endif
+#endif
             if !downloader.authed {
                 fatalError("Login failed with given credentials!")
             }
@@ -402,16 +418,36 @@ struct pixivloader: ParsableCommand {
         }
     }
     
-    static func handle(error: Error) {
-        switch error {
-        case PixivError.targetNotFound:
-            return
+    static func safelyExecute(content: Any? = nil, for function: (Any?) throws -> Void ) {
+        let _ = safelyExecute(content: content, for: function, placeholderToMakeSyntaxNonAmbigous: true)
+    }
+    
+    static func safelyExecute(content: Any? = nil, for function: (Any?) throws -> Any?, placeholderToMakeSyntaxNonAmbigous: Bool = true) -> [PixivIllustration] {
+        var retries = 0
+        var results = [PixivIllustration]()
+        if let content = content, let content = content as? [Any] {
+            for var i in 0...content.count {
+                do {
+                    if let result = try function(content[i]) as? [PixivIllustration] {
+                        results += result
+                    }} catch let e { handle(e, retries: &retries, i: &i) }
+            }
+        }
+        return results
+    }
+    
+    static func handle(_ error: Error, retries: inout Int, i: inout Int) {
+        switch(error) {
         case PixivError.RateLimitError:
-            fatalError("Exiting on RateLimit!")
-        case PixivError.AuthErrors.missingAuth:
-            fatalError("Missing auth! Please run 'pixivloader auth' first!")
+            print("Ratelimit catched us, waiting for 10 sec until retrying...")
+            Thread.sleep(forTimeInterval: 10)
+            i -= 1
+        case PixivError.targetNotFound(_):
+            break
+        case PixivError.responseAcquirationFailed(_):
+            if retries < 3 { retries += 1 } else { fatalError(error.localizedDescription) }
         default:
-            fatalError()
+            fatalError(error.localizedDescription)
         }
     }
 }
@@ -435,7 +471,7 @@ public struct pixivloaderSettings: Codable {
     
     public var blacklistTags: [String] = []
     public var blacklistUsers: [String] = []
-    public var blacklistIllustrations: [Int] = []
+    public var blacklistIllustrations: [String] = []
     
     public var loginRefreshToken: String = ""
 }
