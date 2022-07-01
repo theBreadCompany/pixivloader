@@ -175,7 +175,7 @@ struct pixivloader: ParsableCommand {
             }
             if bookmarks {
                 pixivloader.download.download(illusts: pixivloader.safelyExecute(for: { _ in
-                    try downloader.my_favorite_works(limit: limit)
+                    try downloader.my_favorite_works(publicity: options.publicity, limit: limit)
                 }), download_dir: download_dir, options: self, valid_types: valid_types)
             }
             
@@ -190,11 +190,11 @@ struct pixivloader: ParsableCommand {
         
         @Argument(parsing: .remaining, help: "bookmark illustration")
         var bookmark: [String]
-         
+        
         mutating func run() {
             
             pixivloader.safelyExecute(content: bookmark.flatMap({parse_result(source: $0)}), for: ({ id in
-                try downloader.bookmark(illust_id: id as! Int)
+                try downloader.bookmark(illust_id: id as! Int, publicity: options.publicity)
             }))
             
         }
@@ -218,7 +218,7 @@ struct pixivloader: ParsableCommand {
         static var configuration = CommandConfiguration(abstract: "follow users")
         
         @OptionGroup
-        static var options: pixivloader.Options
+        var options: pixivloader.Options
         
         @Option(name: [.short, .long], help: "manage illustration")
         var illust: [String] = []
@@ -230,11 +230,11 @@ struct pixivloader: ParsableCommand {
             
             if !illust.isEmpty {
                 pixivloader.safelyExecute(content: illust.flatMap({parse_result(source: $0)}), for: { id in
-                    try downloader.follow(user: downloader.illustration(illust_id: id as! Int).user.id.description, publicity: pixivloader.follow.options.publicity)
+                    try downloader.follow(user: downloader.illustration(illust_id: id as! Int).user.id.description, publicity: options.publicity)
                 })
             } else if !user.isEmpty {
                 pixivloader.safelyExecute(content: user.flatMap({parse_result(source: $0)}), for: {
-                    try downloader.follow(user: downloader.illustration(illust_id: $0 as! Int).user.id.description, publicity: pixivloader.follow.options.publicity)
+                    try downloader.follow(user: downloader.illustration(illust_id: $0 as! Int).user.id.description, publicity: options.publicity)
                 })
             } else {
                 print("Please set -i or -u to specify a target.")
@@ -328,6 +328,28 @@ struct pixivloader: ParsableCommand {
         var password: String?
         
         mutating func run() throws {
+            if let refreshtoken = refreshtoken, refreshtoken.isEmpty {
+                let process = Process()
+                process.launchPath = "/usr/bin/find"
+                process.arguments = [".", "-name", "pixivauth", "-type", "f"]
+                let find_stdout = Pipe()
+                process.standardOutput = find_stdout
+                print("Searching for a pixivauth executable...")
+                process.launch()
+                let find_data = find_stdout.fileHandleForReading.readDataToEndOfFile()
+                if let output = String(data: find_data, encoding: .utf8), let execPath = output.components(separatedBy: "\n").first(where: {$0.contains("pixivauth")}) {
+                    print("Found executable, preparing for GUI login...")
+                    print("Executing " + execPath + "...")
+                    let process = Process()
+                    process.launchPath = execPath
+                    let auth_stdout = Pipe()
+                    process.standardOutput = auth_stdout
+                    process.launch()
+                    if let output = String(data: auth_stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8), !output.isEmpty {
+                        config.loginRefreshToken = output
+                    }
+                }
+            }
 #if canImport(Erik)
             downloader.login(username: user, password: password, refresh_token: refreshtoken)
 #else
@@ -425,13 +447,13 @@ struct pixivloader: ParsableCommand {
     static func safelyExecute(content: Any? = nil, for function: (Any?) throws -> Any?, placeholderToMakeSyntaxNonAmbigous: Bool = true) -> [PixivIllustration] {
         var retries = 0
         var results = [PixivIllustration]()
-        if let content = content, let content = content as? [Any] {
-            for var i in 0...content.count {
-                do {
-                    if let result = try function(content[i]) as? [PixivIllustration] {
-                        results += result
-                    }} catch let e { handle(e, retries: &retries, i: &i) }
-            }
+        let content = content as? [Any] ?? [()]
+        for var i in 0..<content.count {
+            do {
+                if let result = try function(content[i]) as? [PixivIllustration] {
+                    results += result
+                }
+            } catch let e { handle(e, retries: &retries, i: &i) }
         }
         return results
     }
