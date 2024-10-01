@@ -279,16 +279,19 @@ struct pixivloader: ParsableCommand {
             if let user = user {
                 print(try! downloader.user_details(user: user))
             }
-            if let illust = illust {
-                let illustration = try! downloader.illustration(illust_id: parse_result(source: illust).first!)
-                print("Title: \(illustration.title)")
-                print("Illustration ID: \(illustration.id)")
-                print("User name: \(illustration.user.name)")
-                print("User ID: \(illustration.user.id)")
-                print("Tags: \(illustration.tags.map {$0.translatedName != nil ? $0.translatedName! : $0.name})")
-                print("Illustration bookmarks: \(illustration.totalBookmarks)")
-                print("Date/Time created: \(illustration.creationDate)")
-                print("Illustration address: https://pixiv.net/en/artworks/\(illustration.id)")
+
+            if let illust_u = illust {
+                pixivloader.safelyExecute(content: parse_result(source: illust_u), for: { id in 
+                    let illustration = try downloader.illustration(illust_id: (id as! Set<Int>).first!) 
+                    print("Title: \(illustration.title)")
+                    print("Illustration ID: \(illustration.id)")
+                    print("User name: \(illustration.user.name)")
+                    print("User ID: \(illustration.user.id)")
+                    print("Tags: \(illustration.tags.map {$0.translatedName != nil ? $0.translatedName! : $0.name})")
+                    print("Illustration bookmarks: \(illustration.totalBookmarks)")
+                    print("Date/Time created: \(illustration.creationDate)")
+                    print("Illustration address: https://pixiv.net/en/artworks/\(illustration.id)")
+                })
             }
         }
     }
@@ -330,21 +333,21 @@ struct pixivloader: ParsableCommand {
         mutating func run() throws {
             if let refreshtoken = refreshtoken, refreshtoken.isEmpty {
                 let process = Process()
-                process.launchPath = "/usr/bin/find"
+                process.executableURL = URL(filePath: "/usr/bin/find")
                 process.arguments = [".", "-name", "pixivauth", "-type", "f"]
                 let find_stdout = Pipe()
                 process.standardOutput = find_stdout
                 print("Searching for a pixivauth executable...")
-                process.launch()
+                try process.run()
                 let find_data = find_stdout.fileHandleForReading.readDataToEndOfFile()
                 if let output = String(data: find_data, encoding: .utf8), let execPath = output.components(separatedBy: "\n").first(where: {$0.contains("pixivauth")}) {
                     print("Found executable, preparing for GUI login...")
                     print("Executing " + execPath + "...")
                     let process = Process()
-                    process.launchPath = execPath
+                    process.executableURL = URL(filePath: execPath)
                     let auth_stdout = Pipe()
                     process.standardOutput = auth_stdout
-                    process.launch()
+                    try process.run()
                     if let output = String(data: auth_stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8), !output.isEmpty {
                         config.loginRefreshToken = output
                     }
@@ -370,16 +373,14 @@ struct pixivloader: ParsableCommand {
         } else if FileManager().directoryExists(source) {
             for item in try! FileManager.default.contentsOfDirectory(atPath: source) {
                 if item.count >= 14, let _illust = Int(item.split(separator: "/").last!.split(separator: "_").first!) {
-                    if 5 <= _illust.description.count && _illust.description.count <= 9 {
+                    if 5 <= _illust.description.count && _illust.description.count <= 10 {
                         illusts.insert(_illust)
                     }
                 }
             }
         } else if FileManager.default.fileExists(atPath: source) {
             if let _illust = Int(source.split(separator: "/").last!.split(separator: "_").first!) { illusts.insert(_illust) }
-        } else if Int(source) != nil && source.count == 8 {
-            illusts.insert(Int(source)!)
-        } else if Int(source) != nil && user_mode {
+        } else if Int(source) != nil {
             illusts.insert(Int(source)!)
         }
         return illusts
@@ -390,10 +391,10 @@ struct pixivloader: ParsableCommand {
             try! FileManager.default.createDirectory(at: config_dir_url, withIntermediateDirectories: false)
         }
         if !FileManager().fileExists(atPath: config_file_url.path) {
-            FileManager.default.createFile(atPath: config_file_url.path, contents: Data("{}".utf8))
+            let _ = FileManager.default.createFile(atPath: config_file_url.path, contents: Data("{}".utf8))
         }
         if !FileManager().fileExists(atPath: translations_file_url.path) {
-            FileManager.default.createFile(atPath: translations_file_url.path, contents: Data("{}".utf8))
+            let _ = FileManager.default.createFile(atPath: translations_file_url.path, contents: Data("{}".utf8))
         }
     }
     
@@ -447,7 +448,7 @@ struct pixivloader: ParsableCommand {
     static func safelyExecute(content: Any? = nil, for function: (Any?) throws -> Any?, placeholderToMakeSyntaxNonAmbigous: Bool = true) -> [PixivIllustration] {
         var retries = 0
         var results = [PixivIllustration]()
-        let content = content as? [Any] ?? [()]
+        let content = content as? [Any] ?? Array(arrayLiteral: content as? Set<Int> ?? ())
         for var i in 0..<content.count {
             do {
                 if let result = try function(content[i]) as? [PixivIllustration] {

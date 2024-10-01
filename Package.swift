@@ -10,8 +10,8 @@ let package = Package(
         .executable(name: "pixivloader", targets: ["pixivloader"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
-        .package(url: "https://github.com/theBreadCompany/pixivswift.git", from: "1.1.4"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
+        .package(url: "https://github.com/theBreadCompany/pixivswift.git", .branchItem("master")),
         .package(url: "https://github.com/theBreadCompany/swiftbar.git", .branchItem("main"))
     ],
     targets: [
