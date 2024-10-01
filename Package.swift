@@ -11,7 +11,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
-        .package(url: "https://github.com/theBreadCompany/pixivswift.git", .branchItem("master")),
+        .package(url: "https://github.com/theBreadCompany/pixivswift.git", from: "1.1.0"),
         .package(url: "https://github.com/theBreadCompany/swiftbar.git", .branchItem("main"))
     ],
     targets: [

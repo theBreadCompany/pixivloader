@@ -476,16 +476,6 @@ struct pixivloader: ParsableCommand {
 }
 pixivloader.main()
 
-extension PixivIllustration: Hashable {
-    public static func == (lhs: PixivIllustration, rhs: PixivIllustration) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(self.id)
-    }
-}
-
 public struct pixivloaderSettings: Codable {
     public var downloadDirectory: String = "Downloads"
     public var downloadLimit: Int = 30
